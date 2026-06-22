@@ -1,81 +1,302 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily English Challenge</title>
-<style>
-body{font-family:Arial,sans-serif;max-width:1000px;margin:auto;padding:15px;background:#fafafa}
-h1{text-align:center}
-.question,.vocab{background:white;border:1px solid #ddd;border-radius:12px;padding:15px;margin-bottom:25px}
-.words{display:flex;flex-wrap:wrap;gap:5px}
-.word{border:1px solid #888;border-radius:5px;padding:3px 5px;background:#f5f5f5;cursor:pointer;font-size:10px}
-.dropzone{min-height:500px;border:3px dashed #999;border-radius:10px;padding:15px;font-size:18px;line-height:2}
-button{width:100%;padding:10px;margin-top:6px;border-radius:8px}
-.answer{display:none;background:#eef7ff;padding:10px;margin-top:10px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Jumbled Sentences</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #16a085;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f0f3f6;
+            margin: 0;
+            padding: 15px;
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            text-align: center;
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .progress {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .badge-easy { background: #d4edda; color: #155724; }
+        .badge-hard { background: #f8d7da; color: #721c24; }
+
+        /* Very Large Answer Box for Mobile */
+        .answer-box {
+            width: 100%;
+            min-height: 140px;
+            border: 2px dashed #b2bec3;
+            border-radius: 12px;
+            background-color: var(--light);
+            padding: 12px;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 6px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .answer-box.correct { border-color: var(--secondary); background-color: #e8f8f5; }
+        .answer-box.incorrect { border-color: var(--danger); background-color: #fdedec; }
+
+        /* Small Jumbled Word Font for Mobile Optimization */
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 25px;
+            min-height: 60px;
+            justify-content: center;
+        }
+
+        .word-btn {
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.85rem; /* Small font size */
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            user-select: none;
+            transition: transform 0.1s, background-color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .word-btn:active {
+            transform: scale(0.95);
+        }
+
+        .word-btn.selected {
+            opacity: 0.4;
+            background: #e9ecef;
+        }
+
+        /* Controls Grid */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button.btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+            transition: background 0.2s;
+        }
+
+        .btn-listen { background-color: #3498db; }
+        .btn-clear { background-color: #e67e22; }
+        .btn-answer { background-color: #9b59b6; }
+        .btn-next { background-color: var(--secondary); grid-column: span 2; }
+
+        .feedback {
+            text-align: center;
+            font-weight: bold;
+            min-height: 24px;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-<h1>📚 Daily English Challenge</h1>
-<p>Tap the phrases to build the correct sentence.</p>
-<div id="questions"></div>
 
-<h2>📖 Vocabulary (English → Korean)</h2>
-<div class="vocab">
-<ul>
-<li>delayed = 지연된</li><li>connecting train = 환승 열차</li><li>presentation = 발표</li>
-<li>struggle = 어려움을 겪다</li><li>confidence = 자신감</li>
-<li>recommended = 추천했다</li><li>financial challenges = 재정적 어려움</li>
-<li>employee benefits = 직원 복지</li><li>deteriorated = 악화되었다</li>
-<li>rescue team = 구조팀</li><li>uncertainty = 불확실성</li>
-<li>groundbreaking findings = 획기적인 연구 결과</li>
-<li>practical applications = 실용적 응용</li>
-<li>collaborative efforts = 협력적인 노력</li>
-<li>remarkable success = 놀라운 성공</li>
-</ul>
+<div class="container">
+    <h1>English Sentence Builder</h1>
+    <div class="progress">Question <span id="current-idx">1</span> of 10</div>
+    <div style="text-align: center;"><span id="difficulty" class="difficulty-badge badge-easy">Simple</span></div>
+
+    <div class="answer-box" id="answer-box" placeholder="Tap words below to build the sentence..."></div>
+
+    <div class="word-pool" id="word-pool"></div>
+
+    <div class="controls">
+        <button class="btn btn-listen" onclick="speakSentence()">🔊 Listen</button>
+        <button class="btn btn-clear" onclick="clearAnswer()">🧹 Clear</button>
+        <button class="btn btn-answer" onclick="showAnswer()">👁️ Answer</button>
+        <button class="btn btn-next" id="next-btn" onclick="nextQuestion()">Next Question ➡️</button>
+    </div>
+
+    <div class="feedback" id="feedback-message"></div>
 </div>
 
 <script>
-const questions=[
-["because","the meeting","was delayed","several employees","missed","their connecting trains","Several employees missed their connecting trains because the meeting was delayed."],
-["although","she had practiced","for months","she was still nervous","before the presentation","Although she had practiced for months, she was still nervous before the presentation."],
-["many students","struggle to improve","their speaking skills","because","they rarely use English","outside the classroom","Many students struggle to improve their speaking skills because they rarely use English outside the classroom."],
-["if you want","to build confidence","you should focus on","communicating clearly","rather than","avoiding mistakes","If you want to build confidence, you should focus on communicating clearly rather than avoiding mistakes."],
-["the restaurant","became popular","after several food bloggers","recommended it","on social media","The restaurant became popular after several food bloggers recommended it on social media."],
-["despite facing","numerous financial challenges","the company managed","to expand internationally","without reducing","employee benefits","Despite facing numerous financial challenges, the company managed to expand internationally without reducing employee benefits."],
-["had the weather conditions","deteriorated further","the rescue team","would have postponed","the operation","until the following morning","Had the weather conditions deteriorated further, the rescue team would have postponed the operation until the following morning."],
-["what distinguishes","highly effective leaders","from ordinary managers","is their ability","to inspire trust","during periods of uncertainty","What distinguishes highly effective leaders from ordinary managers is their ability to inspire trust during periods of uncertainty."],
-["not only did the researcher","publish groundbreaking findings","but she also developed","practical applications","that transformed the industry","Not only did the researcher publish groundbreaking findings, but she also developed practical applications that transformed the industry."],
-["were it not for","the collaborative efforts","of volunteers around the world","the project would never have achieved","such remarkable success","Were it not for the collaborative efforts of volunteers around the world, the project would never have achieved such remarkable success."]
-];
+    const questions = [
+        // 1-5: Simple Sentences
+        { correct: "The cat is sleeping on the mat.", jumbled: ["sleeping", "cat", "on", "the", "The", "mat.", "is"] },
+        { correct: "She loves to read books every night.", jumbled: ["read", "books", "She", "every", "to", "night.", "loves"] },
+        { correct: "Where are you going for your vacation?", jumbled: ["going", "vacation?", "Where", "your", "are", "for", "you"] },
+        { correct: "Please turn off the lights before leaving.", jumbled: ["lights", "turn", "leaving.", "off", "Please", "before", "the"] },
+        { correct: "He runs fast to catch the morning train.", jumbled: ["catch", "morning", "fast", "He", "train.", "the", "runs", "to"] },
+        
+        // 6-10: Very Difficult/Advanced Sentences
+        { correct: "No sooner had he arrived than the storm broke out.", jumbled: ["had", "arrived", "than", "broke", "he", "storm", "out.", "The", "No", "sooner"] },
+        { correct: "Had I known about the traffic, I would have left earlier.", jumbled: ["traffic,", "known", "have", "earlier.", "left", "I", "would", "about", "the", "Had", "I"] },
+        { correct: "Rarely do we encounter such profound philosophical dilemmas in daily life.", jumbled: ["dilemmas", "encounter", "daily", "profound", "do", "such", "life.", "philosophical", "Rarely", "we", "in"] },
+        { correct: "The paradigm shift, albeit controversial, yielded surprisingly beneficial socioeconomic outcomes.", jumbled: ["socioeconomic", "outcomes.", "shift,", "yielded", "The", "albeit", "paradigm", "controversial,", "surprisingly", "beneficial"] },
+        { correct: "Under no circumstances should you disclose the encryption keys to anyone.", jumbled: ["keys", "disclose", "encryption", "anyone.", "should", "the", "no", "circumstances", "you", "Under", "to"] }
+    ];
 
-const box=document.getElementById("questions");
+    let currentIdx = 0;
+    let selectedWords = [];
 
-function shuffle(a){return [...a].sort(()=>Math.random()-0.5)}
+    const answerBox = document.getElementById('answer-box');
+    const wordPool = document.getElementById('word-pool');
+    const feedback = document.getElementById('feedback-message');
+    const currentIdxSet = document.getElementById('current-idx');
+    const difficultyBadge = document.getElementById('difficulty');
 
-questions.forEach((q,i)=>{
-let div=document.createElement("div");
-div.className="question";
-div.innerHTML=`<h3>Question ${i+1}</h3>
-<div class="dropzone" id="drop${i}"></div>
-<div class="words" id="words${i}"></div>
-<button onclick="listen(${i})">🔊 Listen</button>
-<button onclick="show(${i})">👁 Show Answer</button>
-<button onclick="clearA(${i})">🗑 Clear Answer</button>
-<div class="answer" id="ans${i}">${q[q.length-1]}</div>`;
-box.appendChild(div);
+    function loadQuestion() {
+        answerBox.innerHTML = '';
+        wordPool.innerHTML = '';
+        feedback.textContent = '';
+        feedback.style.color = 'initial';
+        answerBox.className = 'answer-box';
+        selectedWords = [];
+        
+        currentIdxSet.textContent = currentIdx + 1;
+        
+        // Handle Difficulty Badge
+        if(currentIdx < 5) {
+            difficultyBadge.textContent = "Simple";
+            difficultyBadge.className = "difficulty-badge badge-easy";
+        } else {
+            difficultyBadge.textContent = "Very Difficult";
+            difficultyBadge.className = "difficulty-badge badge-hard";
+        }
 
-shuffle(q.slice(0,-1)).forEach(w=>{
-let b=document.createElement("span");
-b.className="word"; b.textContent=w;
-b.onclick=()=>{let n=b.cloneNode(true);document.getElementById("drop"+i).appendChild(n);b.style.display="none"};
-document.getElementById("words"+i).appendChild(b);
-});
-});
+        // Populating the small word buttons
+        questions[currentIdx].jumbled.forEach((word, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'word-btn';
+            btn.textContent = word;
+            btn.id = `word-${index}`;
+            btn.onclick = () => handleWordTap(word, index, btn);
+            wordPool.appendChild(btn);
+        });
+    }
 
-function clearA(i){document.getElementById("drop"+i).innerHTML="";document.querySelectorAll("#words"+i+" .word").forEach(x=>x.style.display="inline-block")}
-function show(i){let a=document.getElementById("ans"+i);a.style.display=a.style.display=="block"?"none":"block"}
-function listen(i){let u=new SpeechSynthesisUtterance(questions[i][questions[i].length-1]);u.lang="en-US";speechSynthesis.speak(u)}
+    function handleWordTap(word, index, btn) {
+        if (btn.parentElement === wordPool) {
+            // Move from pool into large answer box
+            wordPool.removeChild(btn);
+            answerBox.appendChild(btn);
+            selectedWords.push(word);
+        } else {
+            // Move back from answer box to pool
+            answerBox.removeChild(btn);
+            wordPool.appendChild(btn);
+            // Put it back in array tracking
+            const wordIndex = selectedWords.indexOf(word);
+            if (wordIndex > -1) selectedWords.splice(wordIndex, 1);
+        }
+        checkAnswerRealtime();
+    }
+
+    function checkAnswerRealtime() {
+        const currentString = selectedWords.join(' ');
+        const targetString = questions[currentIdx].correct;
+
+        // Strip trailing spaces and check match
+        if (currentString === targetString) {
+            feedback.textContent = "🎉 Excellent! Correct sentence!";
+            feedback.style.color = "var(--secondary)";
+            answerBox.className = 'answer-box correct';
+        } else {
+            answerBox.className = 'answer-box';
+            feedback.textContent = "";
+            
+            // Auto flag failure only if length matches but text is wrong
+            if(selectedWords.length === questions[currentIdx].jumbled.length) {
+                feedback.textContent = "❌ Not quite right. Try rearrangement or clear!";
+                feedback.style.color = "var(--danger)";
+                answerBox.className = 'answer-box incorrect';
+            }
+        }
+    }
+
+    function clearAnswer() {
+        loadQuestion();
+    }
+
+    function showAnswer() {
+        clearAnswer();
+        feedback.textContent = `💡 Answer: ${questions[currentIdx].correct}`;
+        feedback.style.color = "var(--dark)";
+    }
+
+    function speakSentence() {
+        // Built-in Native Mobile Text To Speech
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(questions[currentIdx].correct);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85; // slightly slower for language learners
+            window.speechSynthesis.cancel(); // kill existing playback
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert("Sorry, your mobile browser doesn't support text-to-speech features.");
+        }
+    }
+
+    function nextQuestion() {
+        currentIdx = (currentIdx + 1) % questions.length;
+        loadQuestion();
+    }
+
+    // Initialize first question on start
+    window.onload = loadQuestion;
 </script>
+
 </body>
 </html>
