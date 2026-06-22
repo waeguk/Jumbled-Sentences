@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>English Jumbled Sentences</title>
     <style>
         :root {
@@ -65,7 +65,7 @@
         /* Very Large Answer Box for Mobile */
         .answer-box {
             width: 100%;
-            min-height: 140px;
+            min-height: 160px;
             border: 2px dashed #b2bec3;
             border-radius: 12px;
             background-color: var(--light);
@@ -74,19 +74,18 @@
             display: flex;
             flex-wrap: wrap;
             align-content: flex-start;
-            gap: 6px;
+            gap: 8px;
             margin-bottom: 20px;
-            transition: all 0.3s;
         }
 
         .answer-box.correct { border-color: var(--secondary); background-color: #e8f8f5; }
         .answer-box.incorrect { border-color: var(--danger); background-color: #fdedec; }
 
-        /* Small Jumbled Word Font for Mobile Optimization */
+        /* Small Jumbled Word Font for Mobile */
         .word-pool {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 8px;
             margin-bottom: 25px;
             min-height: 60px;
             justify-content: center;
@@ -101,17 +100,11 @@
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             user-select: none;
-            transition: transform 0.1s, background-color 0.2s;
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .word-btn:active {
-            transform: scale(0.95);
-        }
-
-        .word-btn.selected {
-            opacity: 0.4;
-            background: #e9ecef;
+            background-color: #e9ecef;
         }
 
         /* Controls Grid */
@@ -134,7 +127,6 @@
             justify-content: center;
             gap: 8px;
             color: white;
-            transition: background 0.2s;
         }
 
         .btn-listen { background-color: #3498db; }
@@ -157,10 +149,13 @@
     <div class="progress">Question <span id="current-idx">1</span> of 10</div>
     <div style="text-align: center;"><span id="difficulty" class="difficulty-badge badge-easy">Simple</span></div>
 
-    <div class="answer-box" id="answer-box" placeholder="Tap words below to build the sentence..."></div>
+    <!-- Big Target Box -->
+    <div class="answer-box" id="answer-box"></div>
 
+    <!-- Small Word Pool -->
     <div class="word-pool" id="word-pool"></div>
 
+    <!-- Utility Buttons -->
     <div class="controls">
         <button class="btn btn-listen" onclick="speakSentence()">🔊 Listen</button>
         <button class="btn btn-clear" onclick="clearAnswer()">🧹 Clear</button>
@@ -207,7 +202,6 @@
         
         currentIdxSet.textContent = currentIdx + 1;
         
-        // Handle Difficulty Badge
         if(currentIdx < 5) {
             difficultyBadge.textContent = "Simple";
             difficultyBadge.className = "difficulty-badge badge-easy";
@@ -216,28 +210,23 @@
             difficultyBadge.className = "difficulty-badge badge-hard";
         }
 
-        // Populating the small word buttons
         questions[currentIdx].jumbled.forEach((word, index) => {
             const btn = document.createElement('button');
             btn.className = 'word-btn';
             btn.textContent = word;
-            btn.id = `word-${index}`;
-            btn.onclick = () => handleWordTap(word, index, btn);
+            btn.onclick = () => handleWordTap(word, btn);
             wordPool.appendChild(btn);
         });
     }
 
-    function handleWordTap(word, index, btn) {
+    function handleWordTap(word, btn) {
         if (btn.parentElement === wordPool) {
-            // Move from pool into large answer box
             wordPool.removeChild(btn);
             answerBox.appendChild(btn);
             selectedWords.push(word);
         } else {
-            // Move back from answer box to pool
             answerBox.removeChild(btn);
             wordPool.appendChild(btn);
-            // Put it back in array tracking
             const wordIndex = selectedWords.indexOf(word);
             if (wordIndex > -1) selectedWords.splice(wordIndex, 1);
         }
@@ -248,7 +237,6 @@
         const currentString = selectedWords.join(' ');
         const targetString = questions[currentIdx].correct;
 
-        // Strip trailing spaces and check match
         if (currentString === targetString) {
             feedback.textContent = "🎉 Excellent! Correct sentence!";
             feedback.style.color = "var(--secondary)";
@@ -257,9 +245,8 @@
             answerBox.className = 'answer-box';
             feedback.textContent = "";
             
-            // Auto flag failure only if length matches but text is wrong
             if(selectedWords.length === questions[currentIdx].jumbled.length) {
-                feedback.textContent = "❌ Not quite right. Try rearrangement or clear!";
+                feedback.textContent = "❌ Not quite right. Try clearing or reordering!";
                 feedback.style.color = "var(--danger)";
                 answerBox.className = 'answer-box incorrect';
             }
@@ -277,15 +264,14 @@
     }
 
     function speakSentence() {
-        // Built-in Native Mobile Text To Speech
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(questions[currentIdx].correct);
             utterance.lang = 'en-US';
-            utterance.rate = 0.85; // slightly slower for language learners
-            window.speechSynthesis.cancel(); // kill existing playback
+            utterance.rate = 0.85;
+            window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
         } else {
-            alert("Sorry, your mobile browser doesn't support text-to-speech features.");
+            alert("Your browser does not support voice playback.");
         }
     }
 
@@ -294,8 +280,12 @@
         loadQuestion();
     }
 
-    // Initialize first question on start
-    window.onload = loadQuestion;
+    // Force system initialization safely
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", loadQuestion);
+    } else {
+        loadQuestion();
+    }
 </script>
 
 </body>
